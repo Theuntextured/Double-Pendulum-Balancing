@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <sstream>
+#include <format>
 
 #include "Colour.h"
 #include "Common.h"
@@ -101,6 +102,8 @@ private:
 
 #define LOG(Group, Verbosity, ...) \
     GlobalLogGroups::g_##Group.logMessage(LogType::Verbosity, __VA_ARGS__)
+#define LOGF(Group, Verbosity, String, ...) \
+    GlobalLogGroups::g_##Group.logMessage(LogType::Verbosity, std::format(String, __VA_ARGS__))
 #define DECLARE_LOG_GROUP(Name) namespace GlobalLogGroups { extern LogGroup g_##Name;}
 #define DEFINE_LOG_GROUP(Name, DefaultVerbosity) namespace GlobalLogGroups {LogGroup g_##Name(STRINGIFY(Name), LogType::DefaultVerbosity);}
 
