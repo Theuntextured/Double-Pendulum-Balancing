@@ -16,7 +16,7 @@ LogGroup::LogGroup(const std::string &name, LogType_t defaultType) {
         std::cerr << "Failed to open or create log file " << name << ".log" << std::endl;
         isLogFileOpen = false;
     }
-    isLogFileOpen = true;
+    else isLogFileOpen = true;
 }
 
 
@@ -78,6 +78,8 @@ LogGroup * LogGroup::getLogGroup(const std::string &name) {
 const std::unordered_map<std::string, LogGroup *> & LogGroup::getLogGroups() {
     return logGroups;
 }
+
+// must be first in CMakeLists.txt to ensure this stuff is initialized.
 
 uint8_t LogGroup::enabledLogTypes = 0xFF;
 std::mutex LogGroup::logMutex;
