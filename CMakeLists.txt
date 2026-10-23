@@ -56,4 +56,11 @@ target_link_libraries(Double_Pendulum_Balancing
 )
 target_compile_features(Double_Pendulum_Balancing PRIVATE cxx_std_20)
 
+set(APP_VERSION "" CACHE STRING "Application version (empty uses Common.h default)")
+if(NOT APP_VERSION STREQUAL "")
+    string(REPLACE "\\" "\\\\" APP_VERSION_ESCAPED "${APP_VERSION}")
+    string(REPLACE "\"" "\\\"" APP_VERSION_ESCAPED "${APP_VERSION_ESCAPED}")
+    target_compile_definitions(Double_Pendulum_Balancing PRIVATE "APP_VERSION=\"${APP_VERSION_ESCAPED}\"")
+endif()
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Double_Pendulum_Balancing)

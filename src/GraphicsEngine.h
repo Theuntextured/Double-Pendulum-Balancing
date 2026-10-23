@@ -7,6 +7,6 @@ class GraphicsEngine : sf::RenderWindow {
     GraphicsEngine();
     void preTick(sf::Time deltaTime);
     void render();
-    ~GraphicsEngine();
+    ~GraphicsEngine() override;
 public:
 };

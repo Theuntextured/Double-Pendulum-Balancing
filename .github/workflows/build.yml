@@ -1,0 +1,89 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      app-version:
+        description: Version string compiled into APP_VERSION
+        type: string
+        default: ''
+      upload-artifacts:
+        description: Package and upload the Release binaries
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine application version
+        id: version
+        env:
+          APP_VERSION: ${{ inputs.app-version }}
+          VERSION_REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ -z "$APP_VERSION" ]]; then
+            latest_tag=$(git describe --tags --abbrev=0 --first-parent "$VERSION_REF" 2>/dev/null || true)
+            APP_VERSION="${latest_tag:-0.0.0}-dev"
+          fi
+          printf 'version=%s\n' "$APP_VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install CMake
+        run: python -m pip install cmake==4.2.0
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxrandr-dev libxcursor-dev libxi-dev libudev-dev libgl1-mesa-dev libfreetype-dev libharfbuzz-dev
+
+      - name: Configure
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_SHARED_LIBS=OFF
+          "-DAPP_VERSION=$APP_VERSION"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+
+      # Tar preserves executable permissions when downloaded from Actions.
+      - name: Package binaries
+        if: inputs.upload-artifacts
+        run: |
+          mkdir -p artifacts
+          tar -czf "artifacts/Double_Pendulum_Balancing-${{ runner.os }}-${{ runner.arch }}.tar.gz" -C build/bin .
+
+      - name: Upload binaries
+        if: inputs.upload-artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: Double_Pendulum_Balancing-${{ runner.os }}-${{ runner.arch }}
+          path: artifacts/*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
