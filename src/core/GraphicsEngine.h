@@ -2,11 +2,15 @@
 #include "SFML/Graphics.hpp"
 
 class GraphicsEngine : sf::RenderWindow {
-    using Super = sf::RenderWindow;
     friend class Engine;
+
     GraphicsEngine();
+    ~GraphicsEngine() override;
+
     void preTick(sf::Time deltaTime);
     void render();
-    ~GraphicsEngine() override;
+
+    sf::RenderTexture m_renderTarget;
 public:
+    void render(const sf::Drawable& drawable);
 };

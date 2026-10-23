@@ -40,14 +40,26 @@ set(IMGUI_DIR "${imgui_SOURCE_DIR}")
 FetchContent_MakeAvailable(ImGui-SFML)
 
 add_executable(Double_Pendulum_Balancing main.cpp
-        src/Log.cpp
-        src/Log.h
-        src/Engine.cpp
-        src/Engine.h
-        src/GraphicsEngine.cpp
-        src/GraphicsEngine.h
-        src/Common.h
-        src/Colour.h)
+        src/core/Log.cpp
+        src/core/Log.h
+        src/core/Engine.cpp
+        src/core/Engine.h
+        src/core/GraphicsEngine.cpp
+        src/core/GraphicsEngine.h
+        src/core/Common.h
+        src/core/Colour.h
+        src/physics/Beam.cpp
+        src/physics/Beam.h
+        src/physics/Constraint.cpp
+        src/physics/Constraint.h
+        src/physics/PointMass.cpp
+        src/physics/PointMass.h
+        src/physics/PhysicsSolver.cpp
+        src/physics/PhysicsSolver.h
+        src/physics/PhysicsCore.h
+        src/physics/PhysicsCore.cpp)
+
+target_include_directories(Double_Pendulum_Balancing PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
 target_link_libraries(Double_Pendulum_Balancing
         PRIVATE
