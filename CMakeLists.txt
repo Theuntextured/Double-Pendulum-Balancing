@@ -59,6 +59,14 @@ add_executable(Double_Pendulum_Balancing main.cpp
         src/physics/PhysicsCore.h
         src/physics/PhysicsCore.cpp)
 
+add_custom_command(TARGET Double_Pendulum_Balancing POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:Double_Pendulum_Balancing>/assets"
+        COMMENT "Copying assets"
+        VERBATIM
+)
+
 target_include_directories(Double_Pendulum_Balancing PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
 target_link_libraries(Double_Pendulum_Balancing

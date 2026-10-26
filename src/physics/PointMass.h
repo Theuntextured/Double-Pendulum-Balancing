@@ -5,6 +5,6 @@
 
 class PointMass : public PhysicsObject {
 public:
-    float getMomentOfInertia() const override { return FLT_MAX; } // 0 would break shit
+    float getMomentOfInertia() const override { return INFINITY; } // 0 would break shit
     sf::Vector2f getLocalCenterOfMass() const override { return {0, 0}; }
 };

@@ -1,7 +1,8 @@
 #pragma once
 #include "core/Common.h"
+#include "core/Log.h"
 
-class PhysicsObject : public sf::Transformable {
+class PhysicsObject : public sf::Transformable, public sf::Drawable {
 public:
     friend class PhysicsSolver;
 
@@ -9,6 +10,10 @@ public:
 
     virtual float getMomentOfInertia() const = 0;
     virtual sf::Vector2f getLocalCenterOfMass() const = 0;
+protected:
+    // optional
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const override {}
+public:
 
 
     void addForce(sf::Vector2f force, bool localSpace = false);
@@ -33,7 +38,7 @@ public:
     void recalculateMomentOfInertia();
 
 private:
-    void applyForces(float deltaTime);
+    void applyForces(float deltaTime, bool applyGravity = false);
     void resetForces();
     sf::Vector2f m_accumulatedForce{0, 0};
     float m_accumulatedTorque = 0;
@@ -50,3 +55,5 @@ private:
     sf::Vector2f m_cachedLocalCenterOfMass = {0, 0};
     sf::Vector2f m_cachedGlobalCenterOfMass = {0, 0};
 };
+
+DECLARE_LOG_GROUP(Physics)

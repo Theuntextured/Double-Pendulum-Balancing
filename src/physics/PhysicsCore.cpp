@@ -1,5 +1,7 @@
 #include "PhysicsCore.h"
 
+DEFINE_LOG_GROUP(Physics, Warning);
+
 void PhysicsObject::Init() {
     recalculateCenterOfMass();
     recalculateMomentOfInertia();
@@ -54,8 +56,9 @@ void PhysicsObject::recalculateMomentOfInertia() {
     m_cachedMomentOfInertia = getMomentOfInertia();
 }
 
-void PhysicsObject::applyForces(float deltaTime) {
+void PhysicsObject::applyForces(float deltaTime, bool applyGravity) {
     if (!m_isStatic) {
+        if (applyGravity) m_accumulatedForce.y -= 9.8;
         m_velocity += (m_accumulatedForce * deltaTime + m_accumulatedImpulse) / m_mass;
         m_angularVelocity += (m_accumulatedTorque * deltaTime + m_accumulatedTorqueImpulse) / m_cachedMomentOfInertia;
     }
