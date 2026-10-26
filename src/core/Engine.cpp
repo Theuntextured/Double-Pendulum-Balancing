@@ -24,9 +24,14 @@ void Engine::run() {
     }
     LOG(Engine, Info, "Engine running");
     sf::Clock clock;
+    m_clock.restart();
     while (m_graphicsEngine->isOpen()) {
         const auto dt = clock.restart();
         m_graphicsEngine->preTick(dt);
+        isTicking = true;
+        for (const auto tickable : tickables_)
+            tickable->tick(dt.asSeconds());
+        isTicking = false;
         m_graphicsEngine->render();
     }
 }
@@ -42,5 +47,24 @@ void Engine::shutdown() {
     LOG(Engine, Info, "Engine shutdown");
 }
 
-Engine* const g_engine = new Engine();
+void Engine::registerTickable(Tickable *tickable) {
+    if (!tickable) return;
+    if (isTicking) {
+        LOG(Engine, Error, "Tickables cannot be registered after the engine has started ticking!");
+        return;
+    }
+    tickables_.insert(tickable);
+}
+
+void Engine::unregisterTickable(Tickable *tickable) {
+    if (!tickable) return;
+    if (!isTicking) {
+        LOG(Engine, Fatal, "Tickables cannot be unregistered before the engine has started ticking!");
+        exit(-1);
+        return;
+    }
+    tickables_.erase(tickable);
+}
+
+Engine g_engine;
 

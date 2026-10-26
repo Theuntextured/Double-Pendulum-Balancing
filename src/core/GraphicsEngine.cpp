@@ -1,6 +1,7 @@
 #include "GraphicsEngine.h"
 
 #include "Common.h"
+#include "Engine.h"
 #include "imgui-SFML.h"
 #include "imgui.h"
 
@@ -29,7 +30,10 @@ void GraphicsEngine::render() {
     ImGui::EndFrame();
     m_renderTarget.display();
     const sf::Sprite sprite(m_renderTarget.getTexture());
-    draw(sprite);
+    sf::RenderStates states;
+    states.transform.translate({0, static_cast<float>(m_renderTarget.getSize().y)});
+    states.transform.scale({1,-1});
+    draw(sprite, states);
     ImGui::SFML::Render(*this);
     display();
 }

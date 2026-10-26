@@ -1,11 +1,15 @@
 #include "PhysicsCore.h"
 
+#include "PhysicsSolver.h"
+
 DEFINE_LOG_GROUP(Physics, Warning);
 
-void PhysicsObject::Init() {
+void PhysicsObject::init(class PhysicsSolver& solver) {
     recalculateCenterOfMass();
     recalculateMomentOfInertia();
     m_isInitialized = true;
+
+    solver.m_objects.emplace(this);
 }
 
 void PhysicsObject::addForce(sf::Vector2f force, bool localSpace) {

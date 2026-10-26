@@ -6,7 +6,7 @@ class PhysicsObject : public sf::Transformable, public sf::Drawable {
 public:
     friend class PhysicsSolver;
 
-    void Init();
+    void init(class PhysicsSolver& solver);
 
     virtual float getMomentOfInertia() const = 0;
     virtual sf::Vector2f getLocalCenterOfMass() const = 0;
@@ -37,7 +37,7 @@ public:
     void recalculateCenterOfMass();
     void recalculateMomentOfInertia();
 
-private:
+protected:
     void applyForces(float deltaTime, bool applyGravity = false);
     void resetForces();
     sf::Vector2f m_accumulatedForce{0, 0};

@@ -13,11 +13,16 @@ struct DoFConstraint {
             returnLinearForce   = 0;
     
     enum Type : size_t { X, Y, Theta, Num };
+
+    bool isFixed() const { return lowerBound == upperBound && active; }
 };
 
 
 class Constraint : public sf::Drawable {
+    friend class PhysicsSolver;
 public:
+    void init(class PhysicsSolver& solver);
+
     sf::Vector2f localPosition;
     sf::Angle sourceRotation;
     sf::Vector2f targetPosition;
@@ -39,16 +44,23 @@ protected:
         Hinge,
         Slider,
         FixedBar,
-        Sprint,
+        Spring,
         InternalHinge,
         HorizontalBar,
         VerticalBar,
         Hatch,
         Square,
         LimitedInternalHinge,
-        Num
+        Num,
+
+        None = Num,
+
+        Invalid
     };
-    static sf::Texture s_spriteResources[Resource::Num];
+    static sf::Texture s_spriteResources[Num];
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
-    Resource m_cachedResource{Resource::Num};
+    mutable Resource m_cachedResource{Invalid};
+public:
+    static float s_iconSize;
+    NODISCARD Resource getType() const;
 };

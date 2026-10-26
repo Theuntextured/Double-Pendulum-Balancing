@@ -10,8 +10,11 @@
 #define STRINGIFY_INTERNAL(X) #X
 
 #ifndef APP_VERSION
-    #define APP_VERSION "0.0.0-dev"
+    #define APP_VERSION "v0.0.0-dev"
 #endif
+
+#define BIG_NUMBER 1e30
+#define VERY_BIG_NUMBER 1e100
 
 inline constexpr float PI = 3.14159265358979323846f;
 inline constexpr float TWO_PI = 2.f * PI;
@@ -31,4 +34,11 @@ public:
 
     CountIterator begin() const { return CountIterator(0); }
     CountIterator end() const { return CountIterator(count); }
+};
+
+class Tickable {
+public:
+    virtual ~Tickable() = default;
+
+    virtual void tick(float deltaTime) {};
 };
