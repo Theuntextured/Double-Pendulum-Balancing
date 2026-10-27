@@ -57,7 +57,9 @@ add_executable(Double_Pendulum_Balancing main.cpp
         src/physics/PhysicsSolver.cpp
         src/physics/PhysicsSolver.h
         src/physics/PhysicsCore.h
-        src/physics/PhysicsCore.cpp)
+        src/physics/PhysicsCore.cpp
+        src/core/checks.cpp
+        src/core/checks.h)
 
 add_custom_command(TARGET Double_Pendulum_Balancing POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -75,6 +77,10 @@ target_link_libraries(Double_Pendulum_Balancing
         ImGui-SFML::ImGui-SFML
 )
 target_compile_features(Double_Pendulum_Balancing PRIVATE cxx_std_20)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(Double_Pendulum_Balancing PRIVATE DEBUG_MODE)
+endif ()
 
 set(APP_VERSION "" CACHE STRING "Application version (empty uses Common.h default)")
 if(NOT APP_VERSION STREQUAL "")

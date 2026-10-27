@@ -26,10 +26,10 @@ public:
         bool forceLocalSpace = false, bool pointLocalSpace = false);
     void applyTorqueImpulse(float torqueImpulse);
     
-    float getMass() const { return m_mass; }
-    float getAngularVelocity() const { return m_angularVelocity; }
-    sf::Vector2f getVelocity() const { return m_velocity; }
-    bool getIsStatic() const { return m_isStatic; }
+    float getMass() const { return m_isStatic ? INFINITY : m_mass; }
+    sf::Angle getAngularVelocity(float dt) const { return (getRotation() - m_previousRotation) / dt;}
+    sf::Vector2f getVelocity(float dt) const {  return (getPosition() - m_previousVelocity) / dt; }
+    bool isStatic() const { return m_isStatic; }
     bool getIsInitialized() const { return m_isInitialized; }
 
     void setMass(float mass) { m_mass = mass; recalculateMomentOfInertia(); }
@@ -46,8 +46,8 @@ protected:
     float m_accumulatedTorqueImpulse = 0;
 
     float m_mass = 1;
-    sf::Vector2f m_velocity;
-    float m_angularVelocity{0};
+    sf::Vector2f m_previousVelocity;
+    sf::Angle m_previousRotation = sf::Angle::Zero;
     bool m_isStatic{false};
     bool m_isInitialized{false};
 

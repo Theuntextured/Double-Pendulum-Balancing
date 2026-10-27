@@ -4,10 +4,13 @@
 
 struct DoFConstraint {
     bool active = false;
+
+    union {
+        struct { float lowerBound = 0, upperBound = 0; };
+        struct { sf::Angle minAngle, maxAngle; };
+    };
     
-    float   lowerBound          = 0, 
-            upperBound          = 0, 
-            linearDamping       = 0,
+    float   linearDamping       = 0,
             constantDamping     = 0,
             returnConstantForce = 0,
             returnLinearForce   = 0;
@@ -31,7 +34,10 @@ public:
 
     DoFConstraint dofConstraints[DoFConstraint::Num]{};
 
-    sf::Vector3f getTargetRelativeLocation() const;
+    //gets target transform relative to source
+    sf::Transform getTargetRelativeTransform() const;
+
+    NODISCARD bool isStatic() const { return !sourceObject || sourceObject->isStatic(); }
 
 protected:
     enum Resource : size_t {

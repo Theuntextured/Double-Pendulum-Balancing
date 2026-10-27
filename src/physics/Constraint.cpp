@@ -7,10 +7,6 @@ void Constraint::init(class PhysicsSolver &solver) {
     solver.m_constraints.emplace(this);
 }
 
-sf::Vector3f Constraint::getTargetRelativeLocation() const {
-
-}
-
 void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     const Resource type = getType();
 
@@ -135,12 +131,12 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
         case LimitedInternalHinge: {
             auto lowerStates = states;
-            lowerStates.transform.rotate(sf::degrees(theta.lowerBound));
+            lowerStates.transform.rotate(theta.minAngle);
             drawIcon(LimitedInternalHinge, lowerStates, junction);
 
             if (theta.upperBound != theta.lowerBound) {
                 auto upperStates = states;
-                upperStates.transform.rotate(sf::degrees(theta.upperBound));
+                upperStates.transform.rotate(theta.maxAngle);
                 drawIcon(LimitedInternalHinge, upperStates, junction);
             }
             break;
@@ -187,12 +183,12 @@ Constraint::Resource Constraint::getType() const {
             // Hinge, InternalHinge, Hatch, None, LimitedInternalHinge
             if (thetaConstraint.isFixed()) {
                 //Hatch, None
-                if (!sourceObject || sourceObject->getIsStatic()) return m_cachedResource = Hatch;
+                if (!sourceObject || sourceObject->isStatic()) return m_cachedResource = Hatch;
                 return m_cachedResource = None;
             }
             // Hinge, InternalHinge, LimitedInternalHinge
             if (thetaConstraint.active) return m_cachedResource =  LimitedInternalHinge;
-            if (!sourceObject || sourceObject->getIsStatic()) return m_cachedResource = Hinge;
+            if (!sourceObject || sourceObject->isStatic()) return m_cachedResource = Hinge;
             return m_cachedResource = InternalHinge;
         }
         // RSlider, Spring
@@ -214,6 +210,18 @@ static sf::Texture makeSpriteSheetTexture(int index) {
     return texture;
 }
 
+
+sf::Transform Constraint::getTargetRelativeTransform() const {
+    const sf::Transform sourceWorld = sourceObject
+        ? sourceObject->getTransform() * sourceTransform
+        : sourceTransform;
+
+    const sf::Transform targetWorld = targetObject
+        ? targetObject->getTransform() * targetTransform
+        : targetTransform;
+
+    return sourceWorld.getInverse() * targetWorld;
+}
 
 sf::Texture Constraint::s_spriteResources[Num] = {
     makeSpriteSheetTexture(0),
