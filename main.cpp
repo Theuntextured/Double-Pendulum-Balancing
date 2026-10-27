@@ -16,17 +16,17 @@ int main()
     railYConstraint.lowerBound = -600;
     railYConstraint.upperBound = 600;
     rail.dofConstraints[DoFConstraint::Y].active = true;
-    rail.localPosition = {800, 128.f};
+    rail.sourceTransform.translate({800, 128.f});
     rail.targetObject = &firstRod;
-    rail.targetPosition = {-firstRod.getLength() / 2, 0};
+    rail.targetTransform.translate({-firstRod.getLength() / 2, 0});
 
     Constraint internal;
     internal.dofConstraints[DoFConstraint::X].active = true;
     internal.dofConstraints[DoFConstraint::Y].active = true;
     internal.sourceObject = &firstRod;
     internal.targetObject = &secondRod;
-    internal.localPosition = {150.f, 0};
-    internal.targetPosition = {-250.f, 0};
+    internal.sourceTransform.translate({150.f, 0});
+    internal.targetTransform.translate({-250.f, 0});
 
     firstRod.rotate(sf::degrees(90));
     firstRod.setPosition({800, 128.f + 150.f});

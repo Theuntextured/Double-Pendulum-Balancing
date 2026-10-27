@@ -14,7 +14,7 @@ struct DoFConstraint {
     
     enum Type : size_t { X, Y, Theta, Num };
 
-    bool isFixed() const { return lowerBound == upperBound && active; }
+    NODISCARD bool isFixed() const { return lowerBound == upperBound && active; }
 };
 
 
@@ -23,21 +23,15 @@ class Constraint : public sf::Drawable {
 public:
     void init(class PhysicsSolver& solver);
 
-    sf::Vector2f localPosition;
-    sf::Angle sourceRotation;
-    sf::Vector2f targetPosition;
-    sf::Angle targetRotation;
+    sf::Transform sourceTransform;
+    sf::Transform targetTransform;
+
     PhysicsObject* sourceObject{nullptr};
     PhysicsObject* targetObject{nullptr};
+
     DoFConstraint dofConstraints[DoFConstraint::Num]{};
 
-    // z is angular
-    sf::Vector3f getSourceVelocity() const;
-    // z is angular
-    sf::Vector3f getTargetVelocity() const;
-
-    sf::Vector2f getRightVector() const;
-    sf::Vector2f getUpVector() const;
+    sf::Vector3f getTargetRelativeLocation() const;
 
 protected:
     enum Resource : size_t {

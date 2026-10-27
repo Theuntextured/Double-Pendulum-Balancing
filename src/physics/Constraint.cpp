@@ -1,35 +1,14 @@
 #include "Constraint.h"
 
 #include "PhysicsSolver.h"
+#include "core/Engine.h"
 
 void Constraint::init(class PhysicsSolver &solver) {
     solver.m_constraints.emplace(this);
 }
 
-sf::Vector3f Constraint::getSourceVelocity() const {
-    const auto vel = sourceObject->getVelocity() +
-        sf::Vector2f(
-            -sourceObject->getAngularVelocity() * localPosition.y,
-            sourceObject->getAngularVelocity() * localPosition.x
-            );
-    return {vel.x, vel.y,  sourceObject->getAngularVelocity()};
-}
+sf::Vector3f Constraint::getTargetRelativeLocation() const {
 
-sf::Vector3f Constraint::getTargetVelocity() const {
-    const auto vel = targetObject->getVelocity() +
-        sf::Vector2f(
-            -targetObject->getAngularVelocity() * targetPosition.y,
-            targetObject->getAngularVelocity() * targetPosition.x
-            );
-    return {vel.x, vel.y,  targetObject->getAngularVelocity()};
-}
-
-sf::Vector2f Constraint::getRightVector() const {
-    return sf::Vector2f(1, 0).rotatedBy(sourceObject->getRotation()).rotatedBy(sourceRotation);
-}
-
-sf::Vector2f Constraint::getUpVector() const {
-    return sf::Vector2f(0, 1).rotatedBy(sourceObject->getRotation()).rotatedBy(sourceRotation);
 }
 
 void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -54,11 +33,11 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     const auto& y = dofConstraints[DoFConstraint::Y];
     const auto& theta = dofConstraints[DoFConstraint::Theta];
 
+
     if (sourceObject)
         states.transform.combine(sourceObject->getTransform());
 
-    states.transform.translate(localPosition);
-    states.transform.rotate(sourceRotation);
+    states.transform *= sourceTransform;
 
     // originPx is measured in the original 256×256 texture.
     const auto drawQuad = [&](
@@ -94,6 +73,7 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
         drawStates.texture = &s_spriteResources[resource];
         drawStates.coordinateType = sf::CoordinateType::Normalized;
+        drawStates.transform.scale({1.f, -1.f});
 
         target.draw(
             vertices.data(),
@@ -105,7 +85,7 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
     const auto drawIcon = [&](
         Resource resource,
-        sf::RenderStates drawStates,
+        const sf::RenderStates &drawStates,
         sf::Vector2f originPx
     ) {
         drawQuad(resource, drawStates, originPx,
@@ -139,13 +119,11 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
                     lower,
                     floorOffset * size
                 });
-
-                // Floor top edge touches the rollers:
-                // hatch centreline 202, half stroke width 5.
+                // Floor top edge touches the rollers
                 drawQuad(
                     Hatch,
                     floorStates,
-                    {0.f, 197.f},
+                    {0.f, -167},
                     {upper - lower, size},
                     {(upper - lower) / size, 1.f}
                 );
@@ -230,7 +208,7 @@ Constraint::Resource Constraint::getType() const {
 
 static sf::Texture makeSpriteSheetTexture(int index) {
     static const std::filesystem::path spriteSheetPath = "assets/textures/support-spritesheet.png";
-    sf::Texture texture(spriteSheetPath, false, sf::IntRect({index % 2 , 256 * (index / 2)}, {256, 256}));
+    sf::Texture texture(spriteSheetPath, false, sf::IntRect({(index % 2) * 256 , 256 * (index / 2)}, {256, 256}));
     texture.setSmooth(true);
     texture.setRepeated(true);
     return texture;
@@ -250,4 +228,4 @@ sf::Texture Constraint::s_spriteResources[Num] = {
     makeSpriteSheetTexture(9),
 };
 
-float Constraint::s_iconSize = 64.f;
+float Constraint::s_iconSize = 128.f;
