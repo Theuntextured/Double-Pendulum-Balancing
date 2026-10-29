@@ -3,6 +3,7 @@
 #include "PhysicsSolver.h"
 #include "core/Engine.h"
 
+
 void Constraint::init(class PhysicsSolver &solver) {
     solver.m_constraints.emplace(this);
 }
@@ -90,11 +91,11 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
     switch (type) {
         case Slider: {
-            auto rollerStates = states;
             const bool verticalTravel = x.isFixed();
 
+            auto floorStates = states;
             if (verticalTravel)
-                rollerStates.transform.rotate(sf::degrees(90.f));
+                floorStates.transform.rotate(sf::degrees(90.f));
 
             const auto& travel = verticalTravel ? y : x;
 
@@ -110,7 +111,6 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
                 // Roller bottom: y=223; junction: y=40.
                 constexpr float floorOffset = (223.f - 40.f) / cellSize;
 
-                auto floorStates = rollerStates;
                 floorStates.transform.translate({
                     lower,
                     floorOffset * size
@@ -125,6 +125,12 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
                 );
             }
 
+            auto rollerStates = states;
+            rollerStates.transform.translate(
+                getTargetRelativeTransform().transformPoint({0.f, 0.f})
+            );
+            if (verticalTravel)
+                rollerStates.transform.rotate(sf::degrees(90.f));
             drawIcon(Slider, rollerStates, junction);
             break;
         }
@@ -221,6 +227,16 @@ sf::Transform Constraint::getTargetRelativeTransform() const {
         : targetTransform;
 
     return sourceWorld.getInverse() * targetWorld;
+}
+
+sf::Transform Constraint::getSourceWorldTransform() const {
+    return sourceObject
+        ? sourceObject->getTransform() * sourceTransform
+        : sourceTransform;
+}
+
+sf::Transform Constraint::getTargetWorldTransform() const {
+    return targetObject->getTransform() * targetTransform;
 }
 
 sf::Texture Constraint::s_spriteResources[Num] = {

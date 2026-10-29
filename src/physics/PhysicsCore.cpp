@@ -61,10 +61,20 @@ void PhysicsObject::recalculateMomentOfInertia() {
 }
 
 void PhysicsObject::applyForces(float deltaTime, bool applyGravity) {
+    if (deltaTime <= 0) return;
     if (!m_isStatic) {
-        if (applyGravity) m_accumulatedForce.y -= 981;
-        m_velocity += (m_accumulatedForce * deltaTime + m_accumulatedImpulse) / m_mass;
-        m_angularVelocity += (m_accumulatedTorque * deltaTime + m_accumulatedTorqueImpulse) / m_cachedMomentOfInertia;
+        auto velocity = (getPosition() - m_previousPosition) / deltaTime;
+        auto angularVelocity = (getRotation() - m_previousRotation) / deltaTime;
+
+        if (applyGravity) m_accumulatedForce.y -= 981 * deltaTime;
+        velocity += (m_accumulatedForce * deltaTime + m_accumulatedImpulse) / m_mass;
+        angularVelocity += sf::radians((m_accumulatedTorque * deltaTime + m_accumulatedTorqueImpulse) / m_cachedMomentOfInertia);
+
+        m_previousPosition = getPosition();
+        m_previousRotation = getRotation();
+
+        setPosition(getPosition()      + velocity        * deltaTime);
+        setRotation(getRotation() + angularVelocity * deltaTime);
     }
     resetForces();
 }

@@ -28,7 +28,7 @@ public:
     
     float getMass() const { return m_isStatic ? INFINITY : m_mass; }
     sf::Angle getAngularVelocity(float dt) const { return (getRotation() - m_previousRotation) / dt;}
-    sf::Vector2f getVelocity(float dt) const {  return (getPosition() - m_previousVelocity) / dt; }
+    sf::Vector2f getVelocity(float dt) const {  return (getPosition() - m_previousPosition) / dt; }
     bool isStatic() const { return m_isStatic; }
     bool getIsInitialized() const { return m_isInitialized; }
 
@@ -46,7 +46,7 @@ protected:
     float m_accumulatedTorqueImpulse = 0;
 
     float m_mass = 1;
-    sf::Vector2f m_previousVelocity;
+    sf::Vector2f m_previousPosition;
     sf::Angle m_previousRotation = sf::Angle::Zero;
     bool m_isStatic{false};
     bool m_isInitialized{false};

@@ -19,5 +19,38 @@ public:
     bool draw = false;
 
 private:
+    struct CorrectionCache {
+        explicit CorrectionCache(Constraint* constraint);
+
+        bool staticSource;
+
+        float sourceInvMass;
+        float targetInvMass;
+
+        float sourceInvInertia;
+        float targetInvInertia;
+
+        sf::Transform sourceTransform;
+        sf::Transform targetTransform;
+
+        sf::Vector2f sourceAnchor;
+        sf::Vector2f targetAnchor;
+
+        sf::Vector2f sourceCentreOfMass;
+        sf::Vector2f targetCentreOfMass;
+
+        sf::Vector2f rs;
+        sf::Vector2f rt;
+    };
+
     void solveIteration(float dt);
+
+    static void applyPositionCorrection(float correction, Constraint* constraint, bool isX, const CorrectionCache& cache);
+
+    static void applyRotationCorrection(sf::Angle correction, Constraint* constraint, const CorrectionCache& cache);
+
+    static void applyBodyCorrection(
+    PhysicsObject* body,
+    sf::Vector2f positionDelta,
+    float angleDelta);
 };

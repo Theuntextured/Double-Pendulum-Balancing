@@ -3,12 +3,14 @@
 #include "core/Common.h"
 
 struct DoFConstraint {
+    DoFConstraint() :
+        minAngle(reinterpret_cast<sf::Angle &>(lowerBound)),
+        maxAngle(reinterpret_cast<sf::Angle &>(upperBound))
+    {}
     bool active = false;
-
-    union {
-        struct { float lowerBound = 0, upperBound = 0; };
-        struct { sf::Angle minAngle, maxAngle; };
-    };
+    //cannot union due to sf::Angle having a constructor
+    sf::Angle& minAngle, maxAngle;
+    float lowerBound = 0, upperBound = 0;
     
     float   linearDamping       = 0,
             constantDamping     = 0,
@@ -36,6 +38,8 @@ public:
 
     //gets target transform relative to source
     sf::Transform getTargetRelativeTransform() const;
+    sf::Transform getSourceWorldTransform() const;
+    sf::Transform getTargetWorldTransform() const;
 
     NODISCARD bool isStatic() const { return !sourceObject || sourceObject->isStatic(); }
 
