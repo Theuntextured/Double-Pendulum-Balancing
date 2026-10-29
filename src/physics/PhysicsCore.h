@@ -27,8 +27,8 @@ public:
     void applyTorqueImpulse(float torqueImpulse);
     
     float getMass() const { return m_isStatic ? INFINITY : m_mass; }
-    sf::Angle getAngularVelocity(float dt) const { return (getRotation() - m_previousRotation) / dt;}
-    sf::Vector2f getVelocity(float dt) const {  return (getPosition() - m_previousPosition) / dt; }
+    sf::Angle getAngularVelocity(float deltaTime) const { return (getRotation() - m_previousRotation).wrapSigned() / deltaTime;;}
+    sf::Vector2f getVelocity(float deltaTime) const {  return (getPosition() - m_previousPosition) / deltaTime; }
     bool isStatic() const { return m_isStatic; }
     bool getIsInitialized() const { return m_isInitialized; }
 

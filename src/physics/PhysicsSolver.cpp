@@ -285,4 +285,6 @@ void PhysicsSolver::applyBodyCorrection(PhysicsObject *body, sf::Vector2f positi
             body->getTransform().transformPoint(localCOM);
 
     body->move(desiredCOM - currentCOM);
+
+    body->recalculateCenterOfMass();
 }

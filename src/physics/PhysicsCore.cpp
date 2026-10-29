@@ -67,8 +67,8 @@ void PhysicsObject::recalculateMomentOfInertia() {
 void PhysicsObject::applyForces(float deltaTime, bool applyGravity) {
     if (deltaTime <= 0) return;
     if (!m_isStatic) {
-        auto velocity = (getPosition() - m_previousPosition) / deltaTime;
-        auto angularVelocity = (getRotation() - m_previousRotation) / deltaTime;
+        auto velocity = getVelocity(deltaTime);
+        auto angularVelocity = getAngularVelocity(deltaTime);
 
         if (applyGravity) m_accumulatedForce.y -= 981 * getMass();
         velocity += (m_accumulatedForce * deltaTime + m_accumulatedImpulse) / m_mass;
