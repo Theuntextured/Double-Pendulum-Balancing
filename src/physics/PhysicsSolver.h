@@ -53,4 +53,8 @@ private:
     PhysicsObject* body,
     sf::Vector2f positionDelta,
     float angleDelta);
+
+private:
+    float m_accumulator = 0;
+    float m_physicsDt = 1 / 120.f;
 };

@@ -7,9 +7,13 @@ DEFINE_LOG_GROUP(Physics, Warning);
 void PhysicsObject::init(class PhysicsSolver& solver) {
     recalculateCenterOfMass();
     recalculateMomentOfInertia();
-    m_isInitialized = true;
+
+    m_previousPosition = getPosition();
+    m_previousRotation = getRotation();
 
     solver.m_objects.emplace(this);
+
+    m_isInitialized = true;
 }
 
 void PhysicsObject::addForce(sf::Vector2f force, bool localSpace) {
@@ -66,7 +70,7 @@ void PhysicsObject::applyForces(float deltaTime, bool applyGravity) {
         auto velocity = (getPosition() - m_previousPosition) / deltaTime;
         auto angularVelocity = (getRotation() - m_previousRotation) / deltaTime;
 
-        if (applyGravity) m_accumulatedForce.y -= 981 * deltaTime;
+        if (applyGravity) m_accumulatedForce.y -= 981 * getMass();
         velocity += (m_accumulatedForce * deltaTime + m_accumulatedImpulse) / m_mass;
         angularVelocity += sf::radians((m_accumulatedTorque * deltaTime + m_accumulatedTorqueImpulse) / m_cachedMomentOfInertia);
 

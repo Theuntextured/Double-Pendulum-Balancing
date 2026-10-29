@@ -10,7 +10,7 @@ float Beam::getMomentOfInertia() const {
 }
 
 sf::Vector2f Beam::getLocalCenterOfMass() const {
-    return {m_length * 0.5f, 0};
+    return {0, 0};
 }
 
 void Beam::draw(sf::RenderTarget &target, sf::RenderStates states) const {

@@ -29,7 +29,13 @@ void PhysicsSolver::solve(float dt) {
 }
 
 void PhysicsSolver::tick(float deltaTime) {
-    solve(deltaTime);
+    m_accumulator += deltaTime;
+    if (m_accumulator > 1.f) m_accumulator = 1.f; //cap how much it can lag behind
+
+    while (m_accumulator >= m_physicsDt) {
+        solve(m_physicsDt);
+        m_accumulator -= m_physicsDt;
+    }
 
     if (!draw)
         return;
