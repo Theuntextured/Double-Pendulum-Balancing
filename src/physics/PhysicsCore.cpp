@@ -81,6 +81,7 @@ void PhysicsObject::applyForces(float deltaTime, bool applyGravity) {
         setRotation(getRotation() + angularVelocity * deltaTime);
     }
     resetForces();
+    recalculateCenterOfMass();
 }
 
 void PhysicsObject::resetForces() {

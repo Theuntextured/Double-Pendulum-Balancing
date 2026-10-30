@@ -239,6 +239,15 @@ sf::Transform Constraint::getTargetWorldTransform() const {
     return targetObject->getTransform() * targetTransform;
 }
 
+//TODO: finish this off
+void Constraint::applyResistiveForces(float deltaTime) {
+    auto applyLinearResistiveForce = [this, deltaTime](bool isX) {
+
+    };
+    applyLinearResistiveForce(false);
+    applyLinearResistiveForce(true);
+}
+
 sf::Texture Constraint::s_spriteResources[Num] = {
     makeSpriteSheetTexture(0),
     makeSpriteSheetTexture(1),

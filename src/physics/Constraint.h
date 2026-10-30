@@ -41,6 +41,8 @@ public:
     sf::Transform getSourceWorldTransform() const;
     sf::Transform getTargetWorldTransform() const;
 
+    void applyResistiveForces(float deltaTime);
+
     NODISCARD bool isStatic() const { return !sourceObject || sourceObject->isStatic(); }
 
 protected:

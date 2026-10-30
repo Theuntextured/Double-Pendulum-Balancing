@@ -13,13 +13,15 @@ sf::Angle getTransformRotation(const sf::Transform& transform) {
     return sf::radians(std::atan2(m[1], m[0]));
 }
 
-// TODO: constraint friction forces
 void PhysicsSolver::solve(float dt) {
     check(m_iterationCount > 0);
     if (m_iterationCount <= 0)
         return;
 
     const float timeStep = dt / static_cast<float>(m_iterationCount);
+
+    for (const auto constraint : m_constraints)
+        constraint->applyResistiveForces(dt);
 
     for (const auto object : m_objects)
         object->applyForces(dt, true);
