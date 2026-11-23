@@ -23,6 +23,8 @@ public:
 
     bool draw = false;
 
+    Constraint* getConstraintAt(sf::Vector2f location, float tolerance = 50.f);
+
 private:
     struct CorrectionCache {
         explicit CorrectionCache(Constraint* constraint);

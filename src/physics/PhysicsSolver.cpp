@@ -52,6 +52,15 @@ void PhysicsSolver::tick(float deltaTime) {
         g_engine.getGraphicsEngine()->render(*constraint);
 }
 
+Constraint * PhysicsSolver::getConstraintAt(sf::Vector2f location, float tolerance) {
+    const auto toleranceSquared = tolerance * tolerance;
+    for (const auto c : m_constraints) {
+        const auto pos = c->getTargetWorldTransform().transformPoint({0,0});
+        if ((pos - location).lengthSquared() <= toleranceSquared) return c;
+    }
+    return nullptr;
+}
+
 PhysicsSolver::CorrectionCache::CorrectionCache(Constraint* constraint) {
     const auto* sourceObject = constraint->sourceObject;
     const auto* targetObject = constraint->targetObject;
