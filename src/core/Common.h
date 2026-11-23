@@ -45,3 +45,46 @@ public:
 
     virtual void tick(float deltaTime) {};
 };
+
+inline sf::Vector2f transformDirection(const sf::Transform& t, const sf::Vector2f& v) {
+    const auto matrix = t.getMatrix();
+    return {matrix[0] * v.x + matrix[4] * v.y,
+            matrix[1] * v.x + matrix[5] * v.y};
+}
+
+inline sf::Vector2f getTransformPosition(const sf::Transform& t) {
+    const auto matrix = t.getMatrix();
+    return {matrix[12], matrix[13]};
+}
+
+inline sf::Angle getTransformRotation(const sf::Transform& transform) {
+    const float* m = transform.getMatrix();
+    return sf::radians(std::atan2(m[1], m[0]));
+}
+
+inline sf::Vector2f getTransformScale(const sf::Transform& transform) {
+    const float* m = transform.getMatrix();
+    return {m[0], m[5]};
+}
+
+template <typename T, typename... ArgsType>
+bool areAllEqual(const T& a, const T& b, ArgsType&&... args) {
+    return (a == b) && areAllEqual(b, std::forward<ArgsType>(args)...);
+}
+template <typename T>
+bool areAllEqual(const T& a, const T& b) {
+    return a == b;
+}
+
+template <typename T>
+T sign(const T& x) {
+    if (x > 0) return 1;
+    if (x < 0) return -1;
+    return 0;
+}
+template <typename T>
+T sign(const T& x, const T& tolerance) requires (std::is_floating_point_v<T>) {
+    if (x > tolerance) return 1;
+    if (x < -tolerance) return -1;
+    return 0;
+}

@@ -41,7 +41,11 @@ public:
     sf::Transform getSourceWorldTransform() const;
     sf::Transform getTargetWorldTransform() const;
 
-    void applyResistiveForces(float deltaTime);
+    sf::Vector2f getTargetVelocity(float deltaTime) const;
+    sf::Vector2f getSourceVelocity(float deltaTime) const;
+    sf::Vector2f getTargetRelativeVelocity(float deltaTime) const;
+
+    void applyResistiveForces(float deltaTime) const;
 
     NODISCARD bool isStatic() const { return !sourceObject || sourceObject->isStatic(); }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <unordered_set>
 
 #include "Constraint.h"
@@ -11,7 +12,11 @@ class PhysicsSolver : public Tickable {
     size_t m_iterationCount = 3;
     std::unordered_set<PhysicsObject*> m_objects;
     std::unordered_set<Constraint*> m_constraints;
+
+    static std::atomic_uint64_t s_solverCount;
+    size_t m_solverId;
 public:
+    PhysicsSolver();
     void solve(float dt);
 
     void tick(float deltaTime) override;
@@ -50,9 +55,9 @@ private:
     static void applyRotationCorrection(sf::Angle correction, Constraint* constraint, const CorrectionCache& cache);
 
     static void applyBodyCorrection(
-    PhysicsObject* body,
-    sf::Vector2f positionDelta,
-    float angleDelta);
+        PhysicsObject* body,
+        sf::Vector2f positionDelta,
+        float angleDelta);
 
 private:
     float m_accumulator = 0;

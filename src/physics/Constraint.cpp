@@ -127,7 +127,7 @@ void Constraint::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 
             auto rollerStates = states;
             rollerStates.transform.translate(
-                getTargetRelativeTransform().transformPoint({0.f, 0.f})
+                getTransformPosition(getTargetRelativeTransform())
             );
             if (verticalTravel)
                 rollerStates.transform.rotate(sf::degrees(90.f));
@@ -239,10 +239,49 @@ sf::Transform Constraint::getTargetWorldTransform() const {
     return targetObject->getTransform() * targetTransform;
 }
 
-//TODO: finish this off
-void Constraint::applyResistiveForces(float deltaTime) {
-    auto applyLinearResistiveForce = [this, deltaTime](bool isX) {
+sf::Vector2f getVelocityFromAngularVelocity(sf::Vector2f offsetFromCenter, sf::Angle angularVelocity) {
+    const float omega = angularVelocity.asRadians();
+    return {-offsetFromCenter.y * omega, offsetFromCenter.x * omega};
+}
 
+sf::Vector2f Constraint::getTargetVelocity(float deltaTime) const {
+    const auto tv = targetObject->getVelocity(deltaTime);
+    const auto lrv = getVelocityFromAngularVelocity(targetTransform.transformPoint({0,0}), targetObject->getAngularVelocity(deltaTime));
+    return tv + transformDirection(targetObject->getTransform(), lrv);
+}
+
+sf::Vector2f Constraint::getSourceVelocity(float deltaTime) const {
+    if (isStatic()) return sf::Vector2f{0,0};
+    const auto sv = sourceObject->getVelocity(deltaTime);
+    const auto lrv = getVelocityFromAngularVelocity(sourceTransform.transformPoint({0,0}), sourceObject->getAngularVelocity(deltaTime));
+    return sv + transformDirection(sourceObject->getTransform(), lrv);
+}
+
+
+sf::Vector2f Constraint::getTargetRelativeVelocity(float deltaTime) const {
+    const auto worldV = getTargetVelocity(deltaTime) - getSourceVelocity(deltaTime);
+    return transformDirection(getSourceWorldTransform().getInverse(), worldV);
+}
+
+void Constraint::applyResistiveForces(float deltaTime) const {
+    const auto st = getSourceWorldTransform();
+    const auto sit = st.getInverse();
+    const auto tt = getTargetWorldTransform();
+    const auto rt = getTargetRelativeTransform();
+    const auto rv = getTargetRelativeVelocity(deltaTime);
+
+
+    auto applyLinearResistiveForce = [&](bool isX) {
+        const auto& dofConstraint = dofConstraints[isX ? DoFConstraint::X : DoFConstraint::Y];
+        if (!dofConstraint.active) return;
+
+        const auto n = isX ? sf::Vector2f{1.f, 0.f} : sf::Vector2f{0.f, 1.f};
+
+        const float v = rv.dot(n);
+        const float x = getTransformPosition(rt).dot(n);
+
+        float f = 0;
+        f += dofConstraint.constantDamping *
     };
     applyLinearResistiveForce(false);
     applyLinearResistiveForce(true);

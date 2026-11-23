@@ -7,10 +7,10 @@
 #include "core/Engine.h"
 #include "core/GraphicsEngine.h"
 
+std::atomic_uint64_t PhysicsSolver::s_solverCount = 0;
 
-sf::Angle getTransformRotation(const sf::Transform& transform) {
-    const float* m = transform.getMatrix();
-    return sf::radians(std::atan2(m[1], m[0]));
+PhysicsSolver::PhysicsSolver() {
+    m_solverId = s_solverCount++;
 }
 
 void PhysicsSolver::solve(float dt) {
@@ -32,7 +32,10 @@ void PhysicsSolver::solve(float dt) {
 
 void PhysicsSolver::tick(float deltaTime) {
     m_accumulator += deltaTime;
-    if (m_accumulator > 1.f) m_accumulator = 1.f; //cap how much it can lag behind
+    if (m_accumulator > 1.f) {
+        m_accumulator = 1.f; //cap how much it can lag behind
+        LOGF(Physics, Warning, "Physics solver with id %u cannot keep up.", static_cast<unsigned int>(m_solverId));
+    }
 
     while (m_accumulator >= m_physicsDt) {
         solve(m_physicsDt);
@@ -83,8 +86,8 @@ PhysicsSolver::CorrectionCache::CorrectionCache(Constraint* constraint) {
     sourceTransform = constraint->getSourceWorldTransform();
     targetTransform = constraint->getTargetWorldTransform();
 
-    sourceAnchor = sourceTransform.transformPoint({0.f, 0.f});
-    targetAnchor = targetTransform.transformPoint({0.f, 0.f});
+    sourceAnchor = getTransformPosition(sourceTransform);
+    targetAnchor = getTransformPosition(targetTransform);
 
     // Local COM coordinates belong to the body, not its attachment.
     sourceCentreOfMass = sourceObject
@@ -137,7 +140,7 @@ void PhysicsSolver::solveIteration(float /*dt*/) {
                 cache.sourceTransform.getInverse() * cache.targetTransform;
 
             const sf::Vector2f relativePosition =
-                relativeTransform.transformPoint({0.f, 0.f});
+                getTransformPosition(relativeTransform);
 
             const float position = isX
                 ? relativePosition.x
@@ -194,8 +197,7 @@ void PhysicsSolver::applyPositionCorrection(
         : sf::Vector2f{0.f, 1.f};
 
     const sf::Vector2f n =
-        cache.sourceTransform.transformPoint(localAxis) -
-        cache.sourceTransform.transformPoint({0.f, 0.f});
+        transformDirection(cache.sourceTransform, localAxis);
 
     // The constraint axis rotates with the source body.
     // Its exact angular Jacobian therefore also includes the
