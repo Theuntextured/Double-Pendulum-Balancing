@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "imgui-SFML.h"
 #include "imgui.h"
+#include "physics/PhysicsSolver.h"
 
 GraphicsEngine::GraphicsEngine()
     : sf::RenderWindow(
@@ -16,11 +17,7 @@ GraphicsEngine::GraphicsEngine()
 }
 
 void GraphicsEngine::preTick(sf::Time deltaTime) {
-    while (const auto event = pollEvent()) {
-        if ( event->is<sf::Event::Closed>() )
-            close();
-        ImGui::SFML::ProcessEvent(*this, *event);
-    }
+    processEvents();
     clear();
     m_renderTarget.clear(sf::Color::Transparent);
     ImGui::SFML::Update(*this, deltaTime);
@@ -36,6 +33,27 @@ void GraphicsEngine::render() {
     draw(sprite, states);
     ImGui::SFML::Render(*this);
     display();
+}
+
+void GraphicsEngine::processEvents() {
+    while (const auto event = pollEvent()) {
+        ImGui::SFML::ProcessEvent(*this, *event);
+
+
+        if ( event->is<sf::Event::Closed>() ) {
+            close();
+            return;
+        }
+
+        if (m_interactiveSolver) {
+            if (event->is<sf::Event::MouseButtonPressed>() && event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
+                m_grabbedConstraint = m_interactiveSolver->getConstraintAt(static_cast<sf::Vector2f>(event->getIf<sf::Event::MouseButtonPressed>()->position));
+            else if (event->is<sf::Event::MouseButtonReleased>() && event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Left)
+                m_grabbedConstraint = nullptr;
+        }
+    }
+
+    
 }
 
 void GraphicsEngine::render(const sf::Drawable &drawable) {
