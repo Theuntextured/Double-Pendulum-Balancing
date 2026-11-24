@@ -3,6 +3,8 @@
 #include "physics/PointMass.h"
 #include "src/core/Engine.h"
 
+#include <limits>
+
 int main()
 {
     g_engine.init();
@@ -18,6 +20,9 @@ int main()
     railXConstraint.active = true;
     railXConstraint.lowerBound = -600;
     railXConstraint.upperBound = 600;
+    // Light rail friction and a soft spring centered on the rail origin.
+    railXConstraint.constantDamping = 35.f;
+    railXConstraint.linearDamping = 6.f;
     rail.dofConstraints[DoFConstraint::Y].active = true;
     rail.sourceTransform.translate({800, railY});
     rail.targetObject = &firstRod;
@@ -26,6 +31,13 @@ int main()
     Constraint internal;
     internal.dofConstraints[DoFConstraint::X].active = true;
     internal.dofConstraints[DoFConstraint::Y].active = true;
+    // Bearing friction with unrestricted rotation between the rods.
+    auto& hingeRotation = internal.dofConstraints[DoFConstraint::Theta];
+    hingeRotation.active = true;
+    hingeRotation.lowerBound = -std::numeric_limits<float>::infinity();
+    hingeRotation.upperBound = std::numeric_limits<float>::infinity();
+    hingeRotation.constantDamping = 500.f;
+    hingeRotation.linearDamping = 4000.f;
     internal.sourceObject = &firstRod;
     internal.targetObject = &secondRod;
     internal.sourceTransform.translate({150.f, 0});
@@ -56,6 +68,7 @@ int main()
     pointMass.init(solver);
 
     solver.draw = true;
+    g_engine.setInteractiveSolver(&solver);
     g_engine.registerTickable(&solver);
     g_engine.run();
     g_engine.shutdown();

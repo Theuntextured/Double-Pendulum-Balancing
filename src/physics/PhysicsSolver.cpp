@@ -15,7 +15,7 @@ PhysicsSolver::PhysicsSolver() {
 
 void PhysicsSolver::solve(float dt) {
     check(m_iterationCount > 0);
-    if (m_iterationCount <= 0)
+    if (m_iterationCount <= 0 || dt <= 0.f)
         return;
 
     const float timeStep = dt / static_cast<float>(m_iterationCount);
@@ -23,10 +23,12 @@ void PhysicsSolver::solve(float dt) {
     for (const auto constraint : m_constraints)
         constraint->applyResistiveForces(dt);
 
+    applyDragForce(dt);
+
     for (const auto object : m_objects)
         object->applyForces(dt, true);
 
-    for (auto i : CountIterator(m_iterationCount))
+    for (auto _ : CountIterator(m_iterationCount))
         solveIteration(timeStep);
 }
 
@@ -52,13 +54,64 @@ void PhysicsSolver::tick(float deltaTime) {
         g_engine.getGraphicsEngine()->render(*constraint);
 }
 
-Constraint * PhysicsSolver::getConstraintAt(sf::Vector2f location, float tolerance) {
-    const auto toleranceSquared = tolerance * tolerance;
+Constraint * PhysicsSolver::getConstraintAt(sf::Vector2f location, float tolerance) const {
+    auto closestDistanceSquared = tolerance * tolerance;
+    Constraint* closest = nullptr;
     for (const auto c : m_constraints) {
-        const auto pos = c->getTargetWorldTransform().transformPoint({0,0});
-        if ((pos - location).lengthSquared() <= toleranceSquared) return c;
+        if (!c->targetObject || c->targetObject->isStatic())
+            continue;
+        const auto pos = getTransformPosition(c->getTargetWorldTransform());
+        const auto distanceSquared = (pos - location).lengthSquared();
+        if (distanceSquared <= closestDistanceSquared) {
+            closest = c;
+            closestDistanceSquared = distanceSquared;
+        }
     }
-    return nullptr;
+    return closest;
+}
+
+void PhysicsSolver::setDragTarget(Constraint* constraint, sf::Vector2f target, float strength) {
+    m_draggedConstraint = m_constraints.contains(constraint) ? constraint : nullptr;
+    m_dragTarget = target;
+    m_dragStrength = std::max(strength, 0.f);
+}
+
+void PhysicsSolver::applyDragForce(float dt) const {
+    if (!m_draggedConstraint || m_dragStrength <= 0.f)
+        return;
+
+    auto* body = m_draggedConstraint->targetObject;
+    if (!body || body->isStatic())
+        return;
+
+    const auto anchor = getTransformPosition(m_draggedConstraint->getTargetWorldTransform());
+    const auto centre = body->getTransform().transformPoint(body->getLocalCenterOfMass());
+    const auto r = anchor - centre;
+    const auto velocity = m_draggedConstraint->getTargetVelocity(dt);
+
+    // A critically damped spring, scaled by mass for a consistent drag feel.
+    constexpr float frequency = 6.f;
+    const float omega = TWO_PI * frequency * std::sqrt(m_dragStrength);
+    const float mass = body->getMass();
+    const float stiffness = mass * omega * omega;
+    const float damping = 2.f * mass * omega;
+
+    // Solve the spring implicitly at the attachment point. Its inverse mass
+    // includes rotation, so an off-centre grab stays stable at high strength.
+    const float invMass = 1.f / mass;
+    const float invInertia = 1.f / body->getMomentOfInertia();
+    const float response = dt * (damping + dt * stiffness);
+    const float a = 1.f + response * (invMass + invInertia * r.y * r.y);
+    const float b = -response * invInertia * r.x * r.y;
+    const float d = 1.f + response * (invMass + invInertia * r.x * r.x);
+    const auto rhs = stiffness * (m_dragTarget - anchor)
+        - (damping + dt * stiffness) * velocity;
+    const float determinant = a * d - b * b;
+    const sf::Vector2f force{
+        (d * rhs.x - b * rhs.y) / determinant,
+        (a * rhs.y - b * rhs.x) / determinant
+    };
+    body->addForce(force, anchor);
 }
 
 PhysicsSolver::CorrectionCache::CorrectionCache(Constraint* constraint) {

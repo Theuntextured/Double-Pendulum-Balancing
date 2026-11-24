@@ -193,7 +193,9 @@ Constraint::Resource Constraint::getType() const {
                 return m_cachedResource = None;
             }
             // Hinge, InternalHinge, LimitedInternalHinge
-            if (thetaConstraint.active) return m_cachedResource =  LimitedInternalHinge;
+            if (thetaConstraint.active &&
+                (std::isfinite(thetaConstraint.lowerBound) || std::isfinite(thetaConstraint.upperBound)))
+                return m_cachedResource = LimitedInternalHinge;
             if (!sourceObject || sourceObject->isStatic()) return m_cachedResource = Hinge;
             return m_cachedResource = InternalHinge;
         }
@@ -264,14 +266,21 @@ sf::Vector2f Constraint::getTargetRelativeVelocity(float deltaTime) const {
 }
 
 void Constraint::applyResistiveForces(float deltaTime) const {
+    if (!targetObject || deltaTime <= 0.f)
+        return;
+
     const auto st = getSourceWorldTransform();
-    const auto sit = st.getInverse();
     const auto tt = getTargetWorldTransform();
-    const auto rt = getTargetRelativeTransform();
+    const auto rt = st.getInverse() * tt;
     const auto rv = getTargetRelativeVelocity(deltaTime);
 
+    // Damping opposes motion; restoring forces pull toward the local origin.
+    const auto resistiveForce = [](const DoFConstraint& dof, float x, float v) {
+        return -dof.constantDamping * sign(v) - dof.linearDamping * v
+            - dof.returnConstantForce * sign(x) - dof.returnLinearForce * x;
+    };
 
-    auto applyLinearResistiveForce = [&](bool isX) {
+    const auto applyLinearResistiveForce = [&](bool isX) {
         const auto& dofConstraint = dofConstraints[isX ? DoFConstraint::X : DoFConstraint::Y];
         if (!dofConstraint.active) return;
 
@@ -280,11 +289,29 @@ void Constraint::applyResistiveForces(float deltaTime) const {
         const float v = rv.dot(n);
         const float x = getTransformPosition(rt).dot(n);
 
-        float f = 0;
-        f += dofConstraint.constantDamping *
+        const auto force = transformDirection(st, n * resistiveForce(dofConstraint, x, v));
+        if (!targetObject->isStatic())
+            targetObject->addForce(force, getTransformPosition(tt));
+        if (!isStatic())
+            sourceObject->addForce(-force, getTransformPosition(st));
     };
     applyLinearResistiveForce(false);
     applyLinearResistiveForce(true);
+
+    const auto& theta = dofConstraints[DoFConstraint::Theta];
+    if (theta.active) {
+        const float targetOmega = targetObject->isStatic()
+            ? 0.f : targetObject->getAngularVelocity(deltaTime).asRadians();
+        const float sourceOmega = isStatic()
+            ? 0.f : sourceObject->getAngularVelocity(deltaTime).asRadians();
+        const float angle = getTransformRotation(rt).asRadians();
+        const float torque = resistiveForce(theta, angle, targetOmega - sourceOmega);
+
+        if (!targetObject->isStatic())
+            targetObject->addTorque(torque);
+        if (!isStatic())
+            sourceObject->addTorque(-torque);
+    }
 }
 
 sf::Texture Constraint::s_spriteResources[Num] = {

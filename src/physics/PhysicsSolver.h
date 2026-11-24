@@ -23,9 +23,18 @@ public:
 
     bool draw = false;
 
-    Constraint* getConstraintAt(sf::Vector2f location, float tolerance = 50.f);
+    Constraint* getConstraintAt(sf::Vector2f location, float tolerance = 50.f) const;
+
+    void setDragTarget(Constraint* constraint, sf::Vector2f target, float strength);
+    void clearDragTarget() { m_draggedConstraint = nullptr; }
 
 private:
+    Constraint* m_draggedConstraint{nullptr};
+    sf::Vector2f m_dragTarget;
+    float m_dragStrength = 0.f;
+
+    void applyDragForce(float dt) const;
+
     struct CorrectionCache {
         explicit CorrectionCache(Constraint* constraint);
 
